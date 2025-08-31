@@ -1,0 +1,54 @@
+﻿@page
+@model TaskManager.Pages.Tasks.AssignModel
+@{
+    ViewData["Title"] = "Assign Task";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Assign Task to User</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="Task.Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="SelectedUserId" class="form-label">Select User</label>
+                            <select asp-for="SelectedUserId" asp-items="Model.UserOptions" class="form-select"></select>
+                            <span asp-validation-for="SelectedUserId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary">Assign</button>
+                            <a asp-page="./Details" asp-route-id="@Model.Task.Id" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2">Task:</h6>
+                    <p class="mb-1"><strong>@Model.Task?.Title</strong></p>
+                    <p class="text-muted" style="white-space: pre-wrap;">@Model.Task?.Description</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f6f8fb;
+    }
+    .card {
+        border-radius: 1rem;
+    }
+    .card-header {
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+    }
+</style>

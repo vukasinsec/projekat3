@@ -1,0 +1,70 @@
+﻿@page
+@model TaskManager.Pages.Tasks.CreateModel
+@{
+    ViewData["Title"] = "Create Task";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Create Task</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <!-- zadržavamo prosleđivanje ProjectId kao kod tebe -->
+                        <input type="hidden" name="Task.ProjectId" value="@Model.ProjectId" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display:none;"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Task.Title" class="form-label">Title</label>
+                            <input asp-for="Task.Title" class="form-control" placeholder="Enter task title" />
+                            <span asp-validation-for="Task.Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Task.Description" class="form-label">Description</label>
+                            <textarea asp-for="Task.Description" class="form-control" rows="5" placeholder="Describe the task..."></textarea>
+                            <span asp-validation-for="Task.Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Task.DueDate" class="form-label">Due date</label>
+                            <input asp-for="Task.DueDate" type="date" class="form-control" />
+                            <span asp-validation-for="Task.DueDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-success">Create</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- opciono: mali info blok -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header bg-light">
+                    <strong>Tips</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Daj jasan, akcioni naslov (npr. “Prepare Q3 report”).</li>
+                        <li>U opisu navedi ključne korake ili acceptance kriterijume.</li>
+                        <li>Postavi rok ako je poznat da tim zna prioritet.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background-color: #f6f8fb; }
+    .card { border-radius: 1rem; }
+    .card-header { border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; }
+</style>

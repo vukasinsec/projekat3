@@ -1,0 +1,385 @@
+﻿@page 
+@model TaskManager.Pages.Users.ProfileModel
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<style>
+    body {
+        background-image: url('/images/profile.jpeg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 100vh;
+    }
+
+    .backdrop {
+        backdrop-filter: blur(2px);
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 1rem;
+        padding: .75rem 1rem;
+        display: inline-block;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.92);
+        border-radius: 1rem;
+        margin-bottom: 20px;
+        border: 0;
+        box-shadow: 0 .25rem .75rem rgba(0,0,0,.05);
+    }
+
+    .card-header {
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+    }
+
+    .profile-image {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+
+    .section-title {
+        font-weight: 600;
+        font-size: 1.05rem;
+        margin-bottom: .5rem;
+    }
+
+    .scrollable-list {
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transition: .2s;
+    }
+</style>
+
+<div class="container my-4">
+    <!-- HERO -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="backdrop">
+            <span class="fw-semibold">User Profile</span>
+        </div>
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success mb-0">@TempData["Message"]</div>
+        }
+    </div>
+
+    <!-- ROW 1: PROFILE | NOTIFICATIONS + REQUESTS -->
+    <div class="row g-4 mb-2">
+        <!-- Left: Profile + Collaborators -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <!-- Profile -->
+                    <div class="d-flex align-items-start">
+                        <img src="@Model.CurrentUser.ProfileImageUrl" alt="Profile Image" class="profile-image me-3" />
+                        <div class="flex-grow-1">
+                            <h4 class="mb-1">@Model.CurrentUser.UserName</h4>
+                            <div class="mb-2"><span class="badge bg-light text-dark">@Model.CurrentUser.Email</span></div>
+                            <div>
+                                <div class="section-title">Bio</div>
+                                <div class="text-muted" style="white-space: pre-wrap;">@Model.CurrentUser.Bio</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Collaborators -->
+                    <div class="section-title">Collaborators</div>
+                    @if (Model.Collaborators.Count == 0)
+                    {
+                        <p class="text-muted mb-0">No collaborators yet.</p>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var c in Model.Collaborators)
+                            {
+                                <a asp-page="/Users/View" asp-route-id="@c.Id" class="text-decoration-none text-dark">
+                                    <div class="d-flex align-items-center">
+                                        <img src="@c.ProfileImageUrl" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;" />
+                                        <span>@c.UserName</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+
+                    <!-- Validation errors -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger mt-3">
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Notifications + Collaboration Requests -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column" style="gap: 20px;">
+                    <!-- Notifications -->
+                    <div>
+                        <h5 class="card-title mb-2">Notifications</h5>
+                        @if (Model.Notifications.Count == 0)
+                        {
+                            <p class="text-muted mb-0">No notifications.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group scrollable-list">
+                                @foreach (var n in Model.Notifications)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>@n.Message</span>
+                                        @if (!n.IsRead)
+                                        {
+                                            <span class="badge bg-primary">New</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+
+                    <!-- Collaboration Requests -->
+                    <div>
+                        <h5 class="card-title mb-2">Collaboration Requests</h5>
+                        @if (Model.CollaborationRequests.Count == 0)
+                        {
+                            <p class="text-muted mb-0">No collaboration requests.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var req in Model.CollaborationRequests)
+                                {
+                                    <li class="list-group-item">
+                                        <div>@req.Message</div>
+                                        <div class="mt-2 d-flex gap-2">
+                                            <form method="post" asp-page-handler="AcceptRequest" class="d-inline">
+                                                <input type="hidden" name="NotificationId" value="@req.Id" />
+                                                <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                            </form>
+                                            <form method="post" asp-page-handler="RejectRequest" class="d-inline">
+                                                <input type="hidden" name="NotificationId" value="@req.Id" />
+                                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 2: OWNED PROJECTS | TASK STATUS -->
+    <div class="row g-4 mb-2">
+        <!-- Owned Projects -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Owned Projects</span>
+                    <button class="btn btn-sm btn-primary" id="btnShowProjectForm" onclick="showProjectForm()">Add New</button>
+                </div>
+                <div class="card-body">
+                    <!-- Add Project Form -->
+                    <div id="projectForm" style="display:none;" class="mb-4">
+                        <form method="post" asp-page-handler="CreateProject">
+                            <div class="mb-3">
+                                <label for="projectName" class="form-label">Project Name</label>
+                                <input type="text" id="projectName" name="ProjectName" class="form-control" required />
+                            </div>
+                            <div class="mb-3">
+                                <label for="projectDescription" class="form-label">Description</label>
+                                <textarea id="projectDescription" name="ProjectDescription" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">Create</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="hideProjectForm()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Project List -->
+                    @if (Model.OwnedProjects.Count == 0)
+                    {
+                        <p class="text-muted mb-0">You don't own any projects yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group scrollable-list">
+                            @foreach (var p in Model.OwnedProjects)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a asp-page="/Projects/Details" asp-route-id="@p.Id">@p.Name</a>
+                                    <span class="text-muted small ms-2">@p.Description</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Status Overview -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white text-center fw-semibold">
+                    Task Status Overview
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>📝 To Do</span>
+                            <span>@Model.TaskStatusCounts.GetValueOrDefault("ToDo", 0)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-secondary" style="width:@Model.TaskStatusCounts.GetValueOrDefault("ToDo", 0)%;" role="progressbar"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>🚧 In Progress</span>
+                            <span>@Model.TaskStatusCounts.GetValueOrDefault("InProgress", 0)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width:@Model.TaskStatusCounts.GetValueOrDefault("InProgress", 0)%;" role="progressbar"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between">
+                            <span>✅ Done</span>
+                            <span>@Model.TaskStatusCounts.GetValueOrDefault("Done", 0)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width:@Model.TaskStatusCounts.GetValueOrDefault("Done", 0)%;" role="progressbar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 3: SHARED PROJECTS | DISCOVER/SEARCH PROJECTS -->
+    <div class="row g-4">
+        <!-- Shared Projects -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header fw-semibold">Shared Projects</div>
+                <div class="card-body">
+                    @if (Model.SharedProjects.Count == 0)
+                    {
+                        <p class="text-muted mb-0">You're not collaborating on any projects yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group scrollable-list">
+                            @foreach (var p in Model.SharedProjects)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a asp-page="/Projects/Details" asp-route-id="@p.Id">@p.Name</a>
+                                    <span class="text-muted small ms-2">@p.Description</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Discover/Search Projects (matches your JS handlers) -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header fw-semibold">Discover Projects</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <input id="searchProjectInput" type="text" class="form-control" placeholder="Search public projects…" oninput="searchProjects()" />
+                        <div class="form-text">Type at least 2 characters to search.</div>
+                    </div>
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showProjectForm() {
+        document.getElementById('projectForm').style.display = 'block';
+        document.getElementById('btnShowProjectForm').style.display = 'none';
+    }
+
+    function hideProjectForm() {
+        document.getElementById('projectForm').style.display = 'none';
+        document.getElementById('btnShowProjectForm').style.display = 'inline-block';
+    }
+
+    async function requestCollaboration(projectId) {
+        const formData = new FormData();
+        formData.append("SelectedProjectId", projectId);
+
+        const response = await fetch('/Users/Profile?handler=RequestCollaboration', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            alert("Zahtev za saradnju poslat!");
+            searchProjects();
+        } else {
+            alert("Greška pri slanju zahteva.");
+        }
+    }
+
+    async function searchProjects() {
+        const query = document.getElementById('searchProjectInput').value;
+        if (!query || query.length < 2) {
+            document.getElementById('searchResults').innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/Users/Profile?handler=SearchProjects&query=${encodeURIComponent(query)}`);
+            if (!response.ok) return;
+
+            const projects = await response.json();
+            let html = '';
+            for (const p of projects) {
+                html += `
+                <div class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${p.name}</strong><br/>
+                        <small class="text-muted">${p.description ?? ''}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="requestCollaboration('${p.id}')">Request</button>
+                </div>`;
+            }
+            document.getElementById('searchResults').innerHTML = html;
+
+        } catch (error) {
+            console.error("Fetch error:", error);
+        }
+    }
+</script>

@@ -1,0 +1,146 @@
+﻿@page "{id}"
+@model TaskManager.Pages.Tasks.DetailsModel
+@{
+    ViewData["Title"] = "Task Details";
+}
+
+<div class="container my-4">
+    <div class="row">
+        <!-- Levi deo: Detalji taska + komentari -->
+        <div class="col-lg-8 mb-4">
+            <!-- Detalji taska -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">@Model.Task.Title</h4>
+                    @if (Model.IsEditableByCurrentUser)
+                    {
+                        <div>
+                            <a asp-page="/Tasks/Edit" asp-route-id="@Model.Task.Id" class="btn btn-sm btn-primary me-1">Edit</a>
+                            <a asp-page="/Tasks/Assign" asp-route-id="@Model.Task.Id" class="btn btn-sm btn-secondary me-1">Assign</a>
+                            <a asp-page="/Tasks/Delete" asp-route-id="@Model.Task.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </div>
+                    }
+                </div>
+                <div class="card-body">
+                    <p><strong>Description:</strong> @Model.Task.Description</p>
+                    <p>
+                        <strong>Status:</strong> 
+                        <span class="badge bg-secondary">@Model.Task.Status</span>
+                    </p>
+                    <p>
+                        <strong>Priority:</strong> 
+                        <span class="badge bg-warning text-dark">@Model.Task.Priority</span>
+                    </p>
+                    <p><strong>Due Date:</strong> @(Model.Task.DueDate?.ToShortDateString() ?? "None")</p>
+                    <p>
+                        <strong>Created by:</strong>
+                        <a asp-page="/Users/View" asp-route-id="@Model.CreatedBy?.Id">
+                            @Model.CreatedBy?.UserName
+                        </a>
+                    </p>
+                    <p>
+                        <strong>Assigned to:</strong>
+                        @if (Model.AssignedUser != null)
+                        {
+                            <a asp-page="/Users/View" asp-route-id="@Model.AssignedUser.Id">
+                                @Model.AssignedUser.UserName
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not assigned</span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            <!-- Komentari -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Comments</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Comments.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var comment in Model.Comments)
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>@comment.AuthorName:</strong> @comment.Text
+                                            <div class="text-muted" style="font-size:0.85rem;">
+                                                (@comment.CreatedAt.ToShortDateString())
+                                            </div>
+                                        </div>
+                                        @if (comment.UserId == Model.CurrentUserId)
+                                        {
+                                            <div>
+                                                <a asp-page="/Comments/Edit" asp-route-id="@comment.Id" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+                                                <form method="post" asp-page-handler="DeleteComment" asp-route-commentId="@comment.Id" style="display:inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No comments yet.</p>
+                    }
+                </div>
+
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <div class="card-footer">
+                        <h6>Add a Comment</h6>
+                        <form method="post">
+                            <div class="form-group">
+                                <textarea asp-for="NewCommentText" class="form-control" rows="3" placeholder="Write your comment here..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Add Comment</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Desni deo: Info o tasku (summary) -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Task Summary</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Status:</strong> @Model.Task.Status</li>
+                        <li class="list-group-item"><strong>Priority:</strong> @Model.Task.Priority</li>
+                        <li class="list-group-item"><strong>Due:</strong> @(Model.Task.DueDate?.ToShortDateString() ?? "None")</li>
+                        <li class="list-group-item"><strong>Created by:</strong> @Model.CreatedBy?.UserName</li>
+                        <li class="list-group-item"><strong>Assigned to:</strong> @(Model.AssignedUser?.UserName ?? "Not assigned")</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-image: url('/images/details.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transition: 0.2s;
+    }
+</style>

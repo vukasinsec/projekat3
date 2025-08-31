@@ -1,0 +1,212 @@
+﻿@page "{id?}"
+@model TaskManager.Pages.Tasks.EditModel
+@{
+    ViewData["Title"] = "Edit Task";
+}
+
+<div class="container my-5">
+    <!-- Header / breadcrumbs + kratke akcije -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Tasks/Details">Tasks</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Edit</li>
+            </ol>
+        </nav>
+
+        <a asp-page="./Details" asp-route-id="@Model.Task.Id" class="btn btn-outline-secondary">
+            Back to Details
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Glavna forma -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <span class="fw-semibold">Edit Task</span>
+                        <span class="ms-2 badge bg-light text-primary" id="statusBadgeHeader">—</span>
+                        <span class="ms-1 badge bg-warning text-dark" id="priorityBadgeHeader">—</span>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Task.Id" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display:none;"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Task.Title" class="form-label">Title</label>
+                            <input asp-for="Task.Title" class="form-control" placeholder="Enter task title" />
+                            <span asp-validation-for="Task.Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Task.Description" class="form-label">Description</label>
+                            <textarea asp-for="Task.Description" class="form-control" rows="5" placeholder="Describe the task..."></textarea>
+                            <span asp-validation-for="Task.Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Task.DueDate" class="form-label">Due date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" title="Due date">
+                                        <i class="bi bi-calendar-event"></i>
+                                    </span>
+                                    <input asp-for="Task.DueDate" type="date" class="form-control" />
+                                </div>
+                                <span asp-validation-for="Task.DueDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label asp-for="Task.Status" class="form-label">Status</label>
+                                <select asp-for="Task.Status" class="form-select" id="statusSelect">
+                                    <option value="">-- Select --</option>
+                                    <option value="ToDo">To Do</option>
+                                    <option value="InProgress">In Progress</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                                <span asp-validation-for="Task.Status" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label asp-for="Task.Priority" class="form-label">Priority</label>
+                                <select asp-for="Task.Priority" class="form-select" id="prioritySelect">
+                                    <option value="">-- Select --</option>
+                                    <option>Low</option>
+                                    <option>Medium</option>
+                                    <option>High</option>
+                                </select>
+                                <span asp-validation-for="Task.Priority" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="text-muted small">
+                                Last edited: @DateTime.Now.ToString("dd.MM.yyyy. HH:mm")
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <a asp-page="./Details" asp-route-id="@Model.Task.Id" class="btn btn-outline-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desni panel: pregled i meta -->
+        <div class="col-lg-4">
+            <!-- Quick preview -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light">
+                    <strong>Preview</strong>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-1" id="previewTitle">Untitled task</h5>
+                    <div class="mb-2">
+                        <span class="badge bg-secondary" id="statusBadge">Status</span>
+                        <span class="badge bg-warning text-dark" id="priorityBadge">Priority</span>
+                    </div>
+                    <div class="small text-muted">
+                        <i class="bi bi-calendar-event"></i>
+                        <span id="previewDue">No due date</span>
+                    </div>
+                    <hr />
+                    <p class="mb-0" id="previewDesc" style="white-space:pre-wrap;"></p>
+                </div>
+            </div>
+
+            <!-- Help / guidelines -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <strong>Tips</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Use clear, action-oriented titles (e.g. “Prepare Q3 report”).</li>
+                        <li>Keep descriptions concise; add acceptance criteria if treba.</li>
+                        <li>Set a due date i status da ekipa zna prioritet.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Sitni UX “asana-like” preview
+        (function () {
+            const title = document.getElementById('Task_Title');
+            const desc = document.getElementById('Task_Description');
+            const due = document.getElementById('Task_DueDate');
+            const status = document.getElementById('statusSelect');
+            const priority = document.getElementById('prioritySelect');
+
+            const previewTitle = document.getElementById('previewTitle');
+            const previewDesc = document.getElementById('previewDesc');
+            const previewDue = document.getElementById('previewDue');
+
+            const statusBadge = document.getElementById('statusBadge');
+            const priorityBadge = document.getElementById('priorityBadge');
+
+            const statusBadgeHeader = document.getElementById('statusBadgeHeader');
+            const priorityBadgeHeader = document.getElementById('priorityBadgeHeader');
+
+            function fmtDue(d) {
+                if (!d) return 'No due date';
+                try {
+                    const dt = new Date(d);
+                    if (isNaN(dt)) return 'No due date';
+                    return dt.toLocaleDateString();
+                } catch { return 'No due date'; }
+            }
+
+            function update() {
+                previewTitle.textContent = title?.value?.trim() || 'Untitled task';
+                previewDesc.textContent = desc?.value || '';
+                previewDue.textContent = fmtDue(due?.value);
+
+                const s = status?.value || '—';
+                const p = priority?.value || '—';
+
+                statusBadge.textContent = s === '—' ? 'Status' : s.replace('InProgress', 'In Progress');
+                statusBadgeHeader.textContent = s === '—' ? '' : s.replace('InProgress', 'In Progress');
+
+                priorityBadge.textContent = p === '—' ? 'Priority' : p;
+                priorityBadgeHeader.textContent = p === '—' ? '' : p;
+            }
+
+            ['input', 'change', 'keyup'].forEach(ev => {
+                title?.addEventListener(ev, update);
+                desc?.addEventListener(ev, update);
+                due?.addEventListener(ev, update);
+                status?.addEventListener(ev, update);
+                priority?.addEventListener(ev, update);
+            });
+
+            update(); // initial
+        })();
+    </script>
+}
+
+<style>
+    /* Blaga estetika da liči na product app (Asana/Jira) */
+    body {
+        background-color: #f6f8fb;
+    }
+    .card {
+        border-radius: 1rem;
+    }
+    .card-header {
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+    }
+</style>

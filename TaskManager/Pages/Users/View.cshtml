@@ -1,0 +1,192 @@
+﻿@page
+@model TaskManager.Pages.Users.ViewModel
+@{
+    ViewData["Title"] = "User Profile";
+    var user = Model.SelectedUser;
+    var todo = Model.TaskStatusCounts.GetValueOrDefault("ToDo", 0);
+    var inprog = Model.TaskStatusCounts.GetValueOrDefault("InProgress", 0);
+    var done = Model.TaskStatusCounts.GetValueOrDefault("Done", 0);
+    var total = Math.Max(1, todo + inprog + done); // da ne delimo nulom
+}
+
+<div class="container my-5">
+    <!-- Header / breadcrumbs -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Users/Index">Users</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Profile</li>
+            </ol>
+        </nav>
+        <span class="text-muted small">Public profile</span>
+    </div>
+
+    @if (user == null)
+    {
+        <div class="alert alert-warning">
+            User not found.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <!-- LEFT: Profile + Status -->
+            <div class="col-lg-4">
+                <!-- Profile card -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <img src="@user.ProfileImageUrl"
+                             alt="Profile Image"
+                             class="rounded-circle mb-3"
+                             style="width:120px;height:120px;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1);" />
+                        <h4 class="mb-1">@user.UserName</h4>
+                        <div class="mb-2">
+                            <span class="badge bg-light text-dark">@user.Email</span>
+                        </div>
+                        <div class="text-muted" style="white-space:pre-wrap;">@user.Bio</div>
+                    </div>
+                </div>
+
+                <!-- Task status -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-header bg-light">
+                        <strong>Task Status Breakdown</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>📝 To Do</span>
+                                <span>@todo</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-secondary" role="progressbar"
+                                     style="width:@(todo * 100 / total)%"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>🚧 In Progress</span>
+                                <span>@inprog</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-warning" role="progressbar"
+                                     style="width:@(inprog * 100 / total)%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="d-flex justify-content-between">
+                                <span>✅ Done</span>
+                                <span>@done</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width:@(done * 100 / total)%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Projects & Collaborators -->
+            <div class="col-lg-8">
+                <!-- Owned projects -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <strong>Owned Projects</strong>
+                        <span class="badge bg-primary">@Model.OwnedProjects.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.OwnedProjects.Any())
+                        {
+                            <p class="text-muted mb-0">No owned projects.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var p in Model.OwnedProjects)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="me-3">
+                                            <a asp-page="/Projects/Details" asp-route-id="@p.Id" class="fw-semibold text-decoration-none">@p.Name</a>
+                                            <div class="small text-muted">@p.Description</div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <!-- Shared projects -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <strong>Shared Projects</strong>
+                        <span class="badge bg-primary">@Model.SharedProjects.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.SharedProjects.Any())
+                        {
+                            <p class="text-muted mb-0">No shared projects.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var p in Model.SharedProjects)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="me-3">
+                                            <a asp-page="/Projects/Details" asp-route-id="@p.Id" class="fw-semibold text-decoration-none">@p.Name</a>
+                                            <div class="small text-muted">@p.Description</div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <!-- Collaborators -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <strong>Collaborators on Their Projects</strong>
+                        <span class="badge bg-primary">@Model.Collaborators.Count</span>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.Collaborators.Any())
+                        {
+                            <p class="text-muted mb-0">No collaborators.</p>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var c in Model.Collaborators)
+                                {
+                                    <a asp-page="/Users/View" asp-route-id="@c.Id" class="text-decoration-none text-dark">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@c.ProfileImageUrl" class="rounded-circle me-2"
+                                                 style="width:40px;height:40px;object-fit:cover;" />
+                                            <div>
+                                                <div class="fw-semibold">@c.UserName</div>
+                                                <div class="small text-muted">@c.Email</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    body { background-color: #f6f8fb; }
+    .card { border-radius: 1rem; }
+    .card-header { border-top-left-radius: 1rem !important; border-top-right-radius: 1rem !important; }
+    .list-group-item:hover { background-color: #f8f9fa; transition: .2s; }
+</style>
